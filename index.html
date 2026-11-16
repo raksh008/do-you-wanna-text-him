@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Do You Wanna Text Him?</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(160deg, #ffe4ef, #e4ecff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: #2b2233;
+  }
+  .card {
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(60, 20, 80, 0.15);
+    padding: 32px 28px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+  h1 { font-size: 1.6rem; margin: 0 0 6px; }
+  .sub { color: #7a6a85; margin: 0 0 24px; font-size: 0.95rem; }
+  .dice {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 20px;
+    background: #fff;
+    border: 3px solid #2b2233;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    font-size: 3rem;
+    font-weight: 700;
+    box-shadow: 4px 4px 0 #2b2233;
+  }
+  .dice.rolling { animation: wiggle 0.6s ease; }
+  @keyframes wiggle {
+    0% { transform: rotate(0); }
+    25% { transform: rotate(-15deg); }
+    50% { transform: rotate(15deg); }
+    75% { transform: rotate(-10deg); }
+    100% { transform: rotate(0); }
+  }
+
+  /* scene picture */
+  .scene {
+    height: 120px;
+    display: grid;
+    place-items: center;
+    font-size: 5.5rem;
+    margin-top: 20px;
+  }
+  .scene.bounce { animation: bounce 0.8s ease-out; }
+  .scene.shake  { animation: shake 0.7s ease-in-out; }
+  .scene.pop    { animation: pop 0.6s cubic-bezier(.2,1.6,.4,1); }
+  .scene.spin   { animation: spin 0.9s ease-in-out; }
+  .scene.slide  { animation: slide 0.7s ease-out; }
+  @keyframes bounce { 0% { transform: translateY(-60px); } 50% { transform: translateY(0); } 70% { transform: translateY(-14px); } 100% { transform: translateY(0); } }
+  @keyframes shake  { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-12deg); } 40% { transform: rotate(12deg); } 60% { transform: rotate(-8deg); } 80% { transform: rotate(8deg); } }
+  @keyframes pop    { 0% { transform: scale(0.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes spin   { 0% { transform: rotate(-360deg) scale(0.5); } 100% { transform: rotate(0) scale(1); } }
+  @keyframes slide  { 0% { transform: translateX(-120px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+
+  button {
+    font: inherit;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 26px;
+    cursor: pointer;
+    background: #ff5c93;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 0 #c8336b;
+  }
+  button:active { transform: translateY(2px); box-shadow: 0 2px 0 #c8336b; }
+  .reason {
+    margin-top: 12px;
+    padding: 18px;
+    background: #fff4f8;
+    border-radius: 16px;
+    min-height: 90px;
+    line-height: 1.45;
+    font-size: 1rem;
+  }
+  .verdict { font-weight: 700; margin-bottom: 6px; color: #c8336b; }
+  .count { margin-top: 16px; font-size: 0.85rem; color: #7a6a85; }
+  .small { font-size: 0.8rem; color: #9a8ba5; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Do you wanna text him? 💌</h1>
+  <p class="sub">Roll the dice and let fate roast your love life 🎲💅</p>
+
+  <div class="dice" id="dice">?</div>
+  <button id="roll">Roll it! 🎲</button>
+
+  <div class="scene" id="scene">🎲</div>
+
+  <div class="reason" id="reason">
+    <div class="verdict" id="verdict">Ooh, the suspense! 👀</div>
+    <div id="text">Hit the button and let the dice spill the tea. ☕</div>
+  </div>
+
+  <div class="count" id="count"></div>
+  <div class="small">Dice don't run your love life. You do. The dice are just here for vibes. ✨</div>
+</div>
+
+<script>
+  // 30 openers x 30 reasons x 20 endings = 18,000 unique combinations.
+  const openers = [
+    "Okay, listen.", "Real talk.", "Be honest with yourself.", "Plot twist.", "Quick reminder.",
+    "Your future self is watching.", "Your group chat is already typing.", "Your mom would have an opinion.",
+    "Your therapist would raise an eyebrow.", "Your best friend would say no.", "The universe is being weirdly quiet.",
+    "Nobody in this story is the villain yet.", "Your thumb is itching.", "Your brain is writing a movie script.",
+    "This is a big dramatic moment.", "Your phone is already warm.", "Your last text is still sitting there.",
+    "You're thinking in full paragraphs.", "The dice aren't the problem.", "You know exactly how this goes.",
+    "Your draft already sounds desperate.", "You're overthinking a single letter.", "Your comfort is worth more than his reply.",
+    "This is a decision for tomorrow.", "Your heart is writing the message.", "You're one tap away from regret.",
+    "Your pride took a nap, so be careful.", "The silence has a message too.", "You deserve someone who texts back.",
+    "Mood check: a little chaotic."
+  ];
+
+  // each reason has a matching picture (emoji) so it looks like a little scene
+  const reasons = [
+    { t: "He had all week to say something.", e: "📅" },
+    { t: "Sending it at 2am is never a flex.", e: "🌙" },
+    { t: "A three-emoji message is still a whole message.", e: "😶" },
+    { t: "Nobody has ever been saved by a long text at midnight.", e: "🕛" },
+    { t: "The 'haha ya' is already in your head.", e: "🙄" },
+    { t: "Your draft is longer than his last three messages combined.", e: "📜" },
+    { t: "Chasing never looks as cute as it feels.", e: "🏃" },
+    { t: "Your friends have seen this movie before.", e: "🍿" },
+    { t: "Replies are not a measure of your worth.", e: "⚖️" },
+    { t: "You'll reread it four times and still hate it.", e: "🔁" },
+    { t: "The read receipt is doing all the talking.", e: "👀" },
+    { t: "Hope is not a plan.", e: "🤞" },
+    { t: "A walk around the block would help more.", e: "🚶" },
+    { t: "You'd tell your best friend not to send this.", e: "🙅" },
+    { t: "One of you is holding this thread alone.", e: "🧵" },
+    { t: "Your inbox is not a waiting room.", e: "🪑" },
+    { t: "Peace is worth more than a three-word reply.", e: "🕊️" },
+    { t: "The message will still be there tomorrow.", e: "🌅" },
+    { t: "Your snacks are getting cold.", e: "🍕" },
+    { t: "Silence can be an answer, too.", e: "🤐" },
+    { t: "Your confidence is on mute right now.", e: "🔇" },
+    { t: "Anyone who makes you wait has made a choice.", e: "⏳" },
+    { t: "Your sleep schedule will be the real casualty.", e: "😴" },
+    { t: "Future you will want a different story.", e: "🔮" },
+    { t: "Your playlist is making this worse.", e: "🎧" },
+    { t: "A 'k' reply will ruin your whole evening.", e: "🆗" },
+    { t: "You already have a draft that sounds like a sitcom.", e: "📺" },
+    { t: "Nothing you say at 1am is going to be cool.", e: "🥶" },
+    { t: "Your dignity has a waiting list too.", e: "🎟️" },
+    { t: "It's just a text, and it's also not just a text.", e: "💬" }
+  ];
+
+  const endings = [
+    "Put the phone face down.", "Drink some water.", "Eat something before you decide.",
+    "Save the draft and walk away.", "Tell a friend instead.", "Go make a snack.",
+    "Journal it, don't send it.", "Wait until morning.", "Go do something fun.",
+    "Put on your favorite song.", "Text someone who already texts you back.", "Stretch for five minutes.",
+    "Take a shower and reset.", "Be the main character today.", "Watch something silly.",
+    "Call someone who makes you laugh.", "Let the dice keep rolling, not you.", "You've got better things to do tonight.",
+    "Close the app.", "Breathe. Then decide."
+  ];
+
+  const animations = ["bounce", "shake", "pop", "spin", "slide"];
+
+  const TOTAL = openers.length * reasons.length * endings.length; // 18000
+  const KEY = "dontTextHim_seen_v2";
+
+  let seen = [];
+  try {
+    seen = JSON.parse(localStorage.getItem(KEY)) || [];
+  } catch (e) {
+    seen = [];
+  }
+  let seenSet = new Set(seen);
+
+  function saveSeen() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(seen));
+    } catch (e) {
+      // storage may be unavailable; this visit still works
+    }
+  }
+
+  function build(n) {
+    const o = Math.floor(n / (reasons.length * endings.length));
+    const r = Math.floor(n / endings.length) % reasons.length;
+    const e = n % endings.length;
+    return { verdict: openers[o], text: reasons[r].t + " " + endings[e], emoji: reasons[r].e, anim: animations[n % animations.length] };
+  }
+
+  const dice = document.getElementById("dice");
+  const scene = document.getElementById("scene");
+  const verdict = document.getElementById("verdict");
+  const text = document.getElementById("text");
+  const count = document.getElementById("count");
+
+  function updateCount(extra) {
+    count.textContent = "Reasons you've heard: " + seenSet.size + " of " + TOTAL + (extra ? " " + extra : "");
+  }
+
+  document.getElementById("roll").addEventListener("click", () => {
+    dice.classList.remove("rolling");
+    void dice.offsetWidth;
+    dice.classList.add("rolling");
+    dice.textContent = Math.floor(Math.random() * 6) + 1;
+
+    let extra = "";
+    if (seenSet.size >= TOTAL) {
+      seen = [];
+      seenSet = new Set();
+      extra = "(You've heard them all. Starting over, you glutton for punishment. 🍿)";
+    }
+
+    let n;
+    do {
+      n = Math.floor(Math.random() * TOTAL);
+    } while (seenSet.has(n));
+
+    seen.push(n);
+    seenSet.add(n);
+    saveSeen();
+
+    const pick = build(n);
+    verdict.textContent = pick.verdict;
+    text.textContent = pick.text;
+
+    // restart the picture's animation each roll
+    scene.className = "scene";
+    scene.textContent = pick.emoji;
+    void scene.offsetWidth;
+    scene.classList.add(pick.anim);
+
+    updateCount(extra);
+  });
+
+  updateCount("");
+</script>
+</body>
+</html>
